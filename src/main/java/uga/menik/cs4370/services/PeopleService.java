@@ -42,6 +42,9 @@ public class PeopleService {
        DataSource dataSource = this.dataSource;
        List<FollowableUser> followableUsers = new ArrayList<>();
         String query = "select * from user where userID != ?";
+        String userId ="";
+        String firstName ="";
+        String lastName ="";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query)) {
 
@@ -51,10 +54,25 @@ public class PeopleService {
                 // Note: This specific while loop will only run at most once 
                 // since username is unique.
                 while (rs.next()) {
-                    followableUsers.add(new FollowableUser(rs.getString("userId"), rs.getString("firstName"), rs.getString("lastName"),
-                    true, "Mar 07, 2024, 10:54 PM"));
+                    userId = rs.getString("userId");
+                    firstName = rs.getString("firstName");
+                    lastName = rs.getString("lastName");
+                    String postQuery = "select MAX(postDate) as postDate from post group by userId having userId = ?;";
+        try (Connection conn2 = dataSource.getConnection();
+                PreparedStatement pstmt2 = conn.prepareStatement(postQuery)) {
+                    pstmt2.setString(1, rs.getString("userId"));
+                    ResultSet rs2 = pstmt2.executeQuery();
+                    while (rs2.next()) {
+
+                        followableUsers.add(new FollowableUser(userId, firstName,
+                        lastName, false, rs2.getString("postDate") ));
+                    }
+
+
+                    
                     
                 }
+            }
         // Run the query with a datasource.
         // See UserService.java to see how to inject DataSource instance and
         // use it to run a query.
