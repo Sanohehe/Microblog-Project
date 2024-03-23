@@ -28,6 +28,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uga.menik.cs4370.models.BasicPost;
 import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
+import uga.menik.cs4370.models.User;
 import uga.menik.cs4370.services.UserService;
 import uga.menik.cs4370.utility.Utility;
 
@@ -80,9 +81,23 @@ public class PostController {
                     
                     String postDate = rs.getString("postDate");
                     String postText = rs.getString("postText");
-                    Post x = new Post(viewingPostId, postText, postDate, userService.getLoggedInUser(), 0, 0, false, false);
+                    String userId = rs.getString("userId");
+                    final String usersql = "select * from user where userId = ?";
+                    try (Connection conn2 = dataSource.getConnection();
+                PreparedStatement pstmt2 = conn2.prepareStatement(usersql)) {
+                    pstmt2.setString(1, userId);
+                    ResultSet rsUser = pstmt2.executeQuery();
+                    while (rsUser.next()) {
+                    String fName = rsUser.getString("firstName");
+                    String lName = rsUser.getString("lastName");
+                    User x = new User(userId, fName, lName);
                     
-                    posts.add(x);
+                
+                    Post newPost = new Post(viewingPostId, postText, postDate, x, 0, 0, false, false);
+                    
+                    posts.add(newPost);
+                    }
+            }
                     }
                     mv.addObject("posts", posts);
                     

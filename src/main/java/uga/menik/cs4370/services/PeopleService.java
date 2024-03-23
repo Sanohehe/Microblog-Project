@@ -41,6 +41,18 @@ public class PeopleService {
         // Write an SQL query to find the users that are not the current user.
        DataSource dataSource = this.dataSource;
        List<FollowableUser> followableUsers = new ArrayList<>();
+       String noPostQuery = "select * from user where user.userId not in (select post.userId from post)";
+                    try (Connection conn3 = dataSource.getConnection();
+                PreparedStatement pstmt3 = conn3.prepareStatement(noPostQuery)) {
+                        ResultSet rs3 = pstmt3.executeQuery();
+                          while(rs3.next()){
+                            String userId = rs3.getString("userId");
+                            String fName = rs3.getString("firstName");
+                            String lName = rs3.getString("lastName");
+                            followableUsers.add(new FollowableUser(userId, fName, lName, false, "No Posts Yet"));
+                }
+                        
+                }
         String query = "select * from user where userID != ?";
         String userId ="";
         String firstName ="";
@@ -57,13 +69,15 @@ public class PeopleService {
                     userId = rs.getString("userId");
                     firstName = rs.getString("firstName");
                     lastName = rs.getString("lastName");
+                    
+                //finds the most recent post time if the user has posted.
                     String postQuery = "select MAX(postDate) as postDate from post group by userId having userId = ?;";
         try (Connection conn2 = dataSource.getConnection();
-                PreparedStatement pstmt2 = conn.prepareStatement(postQuery)) {
+                PreparedStatement pstmt2 = conn2.prepareStatement(postQuery)) {
                     pstmt2.setString(1, rs.getString("userId"));
                     ResultSet rs2 = pstmt2.executeQuery();
                     while (rs2.next()) {
-
+                        //add the users into the following list
                         followableUsers.add(new FollowableUser(userId, firstName,
                         lastName, false, rs2.getString("postDate") ));
                     }
