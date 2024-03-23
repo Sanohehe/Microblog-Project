@@ -7,9 +7,11 @@ package uga.menik.cs4370.controllers;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,6 +34,14 @@ public class PeopleController {
     // Inject UserService and PeopleService instances.
     // See LoginController.java to see how to do this.
     // Hint: Add a constructor with @Autowired annotation.
+    private final UserService userService;
+    private final PeopleService peopleService;
+
+    @Autowired
+    public PeopleController(UserService userservice, PeopleService peopleservice) {
+        this.userService = userservice;
+        this.peopleService = peopleservice;
+    }
 
     /**
      * Serves the /people web page.
@@ -39,9 +49,10 @@ public class PeopleController {
      * Note that this accepts a URL parameter called error.
      * The value to this parameter can be shown to the user as an error message.
      * See notes in HashtagSearchController.java regarding URL parameters.
+     * @throws SQLException 
      */
     @GetMapping
-    public ModelAndView webpage(@RequestParam(name = "error", required = false) String error) {
+    public ModelAndView webpage(@RequestParam(name = "error", required = false) String error) throws SQLException {
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("people_page");
 
@@ -49,7 +60,12 @@ public class PeopleController {
         // You should replace it with actual data from the database.
         // Use the PeopleService instance to find followable users.
         // Use UserService to access logged in userId to exclude.
-        List<FollowableUser> followableUsers = Utility.createSampleFollowableUserList();
+        uga.menik.cs4370.models.User x;
+        x = userService.getLoggedInUser();
+        String id= x.getUserId();
+
+
+        List<FollowableUser> followableUsers = peopleService.getFollowableUsers(id);
         mv.addObject("users", followableUsers);
 
         // If an error occured, you can set the following property with the

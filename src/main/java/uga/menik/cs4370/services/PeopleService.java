@@ -5,10 +5,17 @@ This is a project developed by Dr. Menik to give the students an opportunity to 
 */
 package uga.menik.cs4370.services;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
+import javax.sql.DataSource;
 import uga.menik.cs4370.models.FollowableUser;
 import uga.menik.cs4370.utility.Utility;
 
@@ -17,15 +24,37 @@ import uga.menik.cs4370.utility.Utility;
  */
 @Service
 public class PeopleService {
-    
+
+    private final DataSource dataSource;
     /**
      * This function should query and return all users that 
      * are followable. The list should not contain the user 
      * with id userIdToExclude.
+     * @throws SQLException 
      */
-    public List<FollowableUser> getFollowableUsers(String userIdToExclude) {
+   
+     @Autowired
+     public PeopleService(DataSource dataSource) {
+        this.dataSource = dataSource;
+     }
+    public List<FollowableUser> getFollowableUsers(String userIdToExclude) throws SQLException {
         // Write an SQL query to find the users that are not the current user.
+       DataSource dataSource = this.dataSource;
+       List<FollowableUser> followableUsers = new ArrayList<>();
+        String query = "select * from user where userID != ?";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(query)) {
 
+                    pstmt.setString(1, userIdToExclude);       
+            try (ResultSet rs = pstmt.executeQuery()) {
+                // Traverse the result rows one at a time.
+                // Note: This specific while loop will only run at most once 
+                // since username is unique.
+                while (rs.next()) {
+                    followableUsers.add(new FollowableUser(rs.getString("userId"), rs.getString("firstName"), rs.getString("lastName"),
+                    true, "Mar 07, 2024, 10:54 PM"));
+                    
+                }
         // Run the query with a datasource.
         // See UserService.java to see how to inject DataSource instance and
         // use it to run a query.
@@ -37,7 +66,9 @@ public class PeopleService {
         // how to create a list of FollowableUsers.
 
         // Replace the following line and return the list you created.
-        return Utility.createSampleFollowableUserList();
+        return followableUsers;
     }
 
+}
+    }
 }

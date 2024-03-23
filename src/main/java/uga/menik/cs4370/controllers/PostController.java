@@ -7,8 +7,16 @@ package uga.menik.cs4370.controllers;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
+import javax.sql.DataSource;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +25,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
+import uga.menik.cs4370.models.BasicPost;
 import uga.menik.cs4370.models.ExpandedPost;
+import uga.menik.cs4370.models.Post;
+import uga.menik.cs4370.services.UserService;
 import uga.menik.cs4370.utility.Utility;
 
 /**
@@ -27,6 +38,15 @@ import uga.menik.cs4370.utility.Utility;
 @RequestMapping("/post")
 public class PostController {
 
+    private final DataSource dataSource;
+
+    private final UserService userService;
+
+    @Autowired
+    public PostController(DataSource dataSource, UserService userService) {
+        this.dataSource = dataSource;
+        this.userService = userService;
+    }
     /**
      * This function handles the /post/{postId} URL.
      * This handlers serves the web page for a specific post.
@@ -36,18 +56,39 @@ public class PostController {
      * The above URL assigns 1 to postId.
      * 
      * See notes from HomeController.java regardig error URL parameter.
+     * @throws SQLException 
      */
     @GetMapping("/{postId}")
     public ModelAndView webpage(@PathVariable("postId") String postId,
-            @RequestParam(name = "error", required = false) String error) {
+            @RequestParam(name = "error", required = false) String error) throws SQLException {
         System.out.println("The user is attempting to view post with id: " + postId);
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("posts_page");
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        List<ExpandedPost> posts = Utility.createSampleExpandedPostWithComments();
-        mv.addObject("posts", posts);
+        final String sql2 = "select * from post where postId = ?";
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement pstmt = conn.prepareStatement(sql2)) {
+                    pstmt.setString(1, postId);
+                    List<Post> posts = new ArrayList<>();
+                    ResultSet rs = pstmt.executeQuery();
+                    while (rs.next()) {
+                    String viewingPostId = rs.getString("postId");
+                    
+                    
+                    String postDate = rs.getString("postDate");
+                    String postText = rs.getString("postText");
+                    Post x = new Post(viewingPostId, postText, postDate, userService.getLoggedInUser(), 0, 0, false, false);
+                    
+                    posts.add(x);
+                    }
+                    mv.addObject("posts", posts);
+                    
+                }
+
+        
 
         // If an error occured, you can set the following property with the
         // error message to show the error message to the user.
