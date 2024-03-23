@@ -67,7 +67,7 @@ public class HomeController {
 
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        final String sql2 = "select * from post where userId != ? ORDER BY postDate DESC";
+        final String sql2 = "select * from post,follow where userId != ? AND followerUserId = ? AND followeeUserId = userId ORDER BY postDate DESC";
         //first sql query that grabs the data from the post table.
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql2)) {
@@ -76,6 +76,7 @@ public class HomeController {
                     String postText ="";
                     String postDate ="";
                     pstmt.setString(1, userId);
+                    pstmt.setString(2, userId);
                     List<Post> posts = new ArrayList<>();
                     ResultSet rs = pstmt.executeQuery();
                     while (rs.next()) {
@@ -87,8 +88,6 @@ public class HomeController {
                     String fName ="";
                     String lName ="";
                     final String usersql = "select * from user where userId = ?";
-                    //second sql query that identifies the user whose profile is clicked on.
-                    System.out.println("Attempting to identify user..");
                     try (Connection conn2 = dataSource.getConnection();
                 PreparedStatement pstmt2 = conn2.prepareStatement(usersql)) {
                     pstmt2.setString(1, postUser);

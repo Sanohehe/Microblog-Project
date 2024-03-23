@@ -68,9 +68,6 @@ public class PeopleService {
                         lastName, false, rs2.getString("postDate") ));
                     }
 
-
-                    
-                    
                 }
             }
         // Run the query with a datasource.

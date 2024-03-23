@@ -7,8 +7,13 @@ package uga.menik.cs4370.controllers;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.List;
+
+import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
@@ -36,11 +41,13 @@ public class PeopleController {
     // Hint: Add a constructor with @Autowired annotation.
     private final UserService userService;
     private final PeopleService peopleService;
+    private final DataSource dataSource;
 
     @Autowired
-    public PeopleController(UserService userservice, PeopleService peopleservice) {
+    public PeopleController(UserService userservice, PeopleService peopleservice, DataSource dataSource) {
         this.userService = userservice;
         this.peopleService = peopleservice;
+        this.dataSource = dataSource;
     }
 
     /**
@@ -90,21 +97,63 @@ public class PeopleController {
      * An example URL that is handled by this function looks like below:
      * http://localhost:8081/people/1/follow/false
      * The above URL assigns 1 to userId and false to isFollow.
+     * @throws SQLException 
      */
     @GetMapping("{userId}/follow/{isFollow}")
     public String followUnfollowUser(@PathVariable("userId") String userId,
-            @PathVariable("isFollow") Boolean isFollow) {
+            @PathVariable("isFollow") Boolean isFollow) throws SQLException {
         System.out.println("User is attempting to follow/unfollow a user:");
         System.out.println("\tuserId: " + userId);
         System.out.println("\tisFollow: " + isFollow);
+        
+
+        //checks if the user is already following the selected user
+        final String checkFollowing = "select * from follow";
+        try (Connection conn2 = dataSource.getConnection();
+                PreparedStatement pstmt2 = conn2.prepareStatement(checkFollowing)) {
+                    ResultSet rs = pstmt2.executeQuery();
+                    while(rs.next()) {
+                        String followerUserId = rs.getString("followerUserId");
+                        String followeeUserId = rs.getString("followeeUSerId");
+                        if (followerUserId.equals(userService.getLoggedInUser().getUserId()) && 
+                        followeeUserId.equals(userId)) {
+                            isFollow = false;
+                            
+                            //if the user is already following the selected user, then we change the operation
+                            //to an unfollowing, by deleting the row in the follow table that describes the 
+                            //following relationship between the two users.
+                            final String deleteFollowing = "delete from follow where followerUserId = ? AND followeeUserId = ?";
+                            try (Connection conn3 = dataSource.getConnection();
+                                PreparedStatement deletingPstmt = conn3.prepareStatement(deleteFollowing)) {
+                                    deletingPstmt.setString(1, userService.getLoggedInUser().getUserId());
+                                    deletingPstmt.setString(2, userId);
+                                    deletingPstmt.executeUpdate();
+                        }
+                    }
+                }
+        //if the users do not have a previous follow relationship in the follow table,
+        //then we can insert it here through this sql statement.
+        if (isFollow == true) {
+        final String followerSql = "insert ignore into follow (followerUserId, followeeUserId) values (?, ?)";
+
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement followerStmt = conn.prepareStatement(followerSql)) {
+                followerStmt.setString(1, userService.getLoggedInUser().getUserId());
+                followerStmt.setString(2, userId);
+                followerStmt.executeUpdate();
+        }
+    }
+        
 
         // Redirect the user if the comment adding is a success.
-        // return "redirect:/people";
+        
+        return "redirect:/people";
 
         // Redirect the user with an error message if there was an error.
-        String message = URLEncoder.encode("Failed to (un)follow the user. Please try again.",
-                StandardCharsets.UTF_8);
-        return "redirect:/people?error=" + message;
+        //String message = URLEncoder.encode("Failed to (un)follow the user. Please try again.",
+                //StandardCharsets.UTF_8);
+        //return "redirect:/people?error=" + message;
     }
 
+}
 }
