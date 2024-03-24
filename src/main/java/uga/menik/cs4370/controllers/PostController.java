@@ -27,13 +27,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
-import uga.menik.cs4370.models.BasicPost;
+
 import uga.menik.cs4370.models.Comment;
 import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
 import uga.menik.cs4370.services.UserService;
-import uga.menik.cs4370.utility.Utility;
+
 
 /**
  * Handles /post URL and its sub urls.

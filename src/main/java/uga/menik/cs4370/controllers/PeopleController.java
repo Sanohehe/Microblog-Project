@@ -16,7 +16,6 @@ import java.util.List;
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.autoconfigure.security.SecurityProperties.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,7 +26,7 @@ import org.springframework.web.servlet.ModelAndView;
 import uga.menik.cs4370.models.FollowableUser;
 import uga.menik.cs4370.services.PeopleService;
 import uga.menik.cs4370.services.UserService;
-import uga.menik.cs4370.utility.Utility;
+
 
 /**
  * Handles /people URL and its sub URL paths.

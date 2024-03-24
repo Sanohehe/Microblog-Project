@@ -11,6 +11,8 @@ select * from post,follow where userId != ? AND followerUserId = ? AND followeeU
 --Found in HomeController and corresponds to http://localhost:8081/
 --Found in PostController and corresponds to http://localhost:8081/post/{postId}
 --Found in ProfileController and corresponds to http://localhost:8081/profile/{userId}
+--Found in BookmarksController and corresponds to http://localhost:8081/bookmarks
+--Found in HashtagSearchController and corresponfs to http://localhost:8081/hashtagsearch
 select * from user where userId = ?
 
 --Query that finds the amount of comments a certain post with the specified postId has.
@@ -67,6 +69,7 @@ select * from post where postId = ?
 --most recent to last
 --Found in PostController and corresponds to http://localhost:8081/post/{postId}
 --Found in ProfileController and corresponds to http://localhost:8081/profile/{userId}
+--Found in BookmarksController and corresponds to http://localhost:8081/bookmarks
 select * from comment where comment.postId = ? ORDER BY commentDate DESC
 
 --Query that adds into the comment table, the values from the postId and the logged
@@ -78,11 +81,13 @@ insert into comment (postId, userId, commentDate, commentText) values (?,?,?,?)
 --message.
 --Found in PostController and corresponds to http://localhost:8081/post/{postId}/heart/false
 --Found in ProfileController and corresponds to http://localhost:8081/profile/{userId}
+--Found in BookmarksController and corresponds to http://localhost:8081/bookmarks
 delete from heart where postId = ? AND userId = ?
 
 --Query that inserts the record of a user hearting a post into the heart table
 --Found in PostController and corresponds to http://localhost:8081/post/{postId}/heart/true
 --Found in ProfileController and corresponds to http://localhost:8081/profile/{userId}
+--Found in BookmarksController and corresponds to http://localhost:8081/bookmarks
 insert into heart (postId, userId) values (?,?)
 
 --Query to find all the posts made by a specific user and list them from most recent
@@ -104,7 +109,28 @@ delete from follow where followerUserId = ? AND followeeUserId = ?
 --Found in PeopleController and corresponds to http://localhost:8081/people/{userID}/follow/true
 insert ignore into follow (followerUserId, followeeUserId) values (?, ?)
 
---Query that finds the post information of posts that the user has 
+--Query that finds the post information of posts that the user has bookmarked
+--Found in BookmarksController and corresponds to http://localhost:8081/bookmarks
 select post.postId, post.userId, postDate, postText from post,bookmark where bookmark.userId = ?  AND bookmark.postId = post.postId
+
+--Query that finds if the post has been bookmarked by the current user
+--Found in ProfileController and corresponds to http://localhost:8081/profile/{userId}
+--Found in PostController and corresponds to http://localhost:8081/post/{postId}/heart/true
+--Found in HomeController and corresponds to http://localhost:8081/
+select * from bookmark where userId = ? AND postId = ?
+
+--Query that retrives the information from the post table based on the hashtags it contains
+--Found in HashtagSearchController and corresponfs to http://localhost:8081/hashtagsearch
+SELECT p.*, COUNT(DISTINCT h.hashTag) as tagCount " +
+                "FROM post p " +
+                "JOIN hashtag h ON p.postId = h.postId " +
+                "WHERE h.hashTag IN (%s) " +
+                "GROUP BY p.postId " +
+                "HAVING COUNT(DISTINCT h.hashTag) = ?
+
+--Query that inserts a hashtag into the hashtag table when a post is created using the form
+--in HomeController. This allowed searching by hashtag later on.
+--Found in HomeController and corrensponds to http://localhost:8081/createpost
+INSERT INTO hashtag (hashTag, postId) VALUES (?, ?)
 
 

@@ -11,7 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
+
 
 import javax.sql.DataSource;
 
@@ -27,7 +27,7 @@ import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
 import uga.menik.cs4370.services.UserService;
-import uga.menik.cs4370.utility.Utility;
+
 
 /**
  * Handles /profile URL and its sub URLs.

@@ -25,7 +25,7 @@ import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
 import uga.menik.cs4370.services.UserService;
-import uga.menik.cs4370.utility.Utility;
+
 
 /**
  * Handles /bookmarks and its sub URLs.

@@ -17,7 +17,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 import uga.menik.cs4370.models.FollowableUser;
-import uga.menik.cs4370.utility.Utility;
+
 
 /**
  * This service contains people related functions.
