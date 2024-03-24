@@ -100,26 +100,26 @@ public class ProfileController {
                     String lName ="";
                     final String usersql = "select * from user where userId = ?";
                     //second sql query that identifies the user whose profile is clicked on.
-                    System.out.println("Attempting to identify user..");
+                   
                     try (Connection conn2 = dataSource.getConnection();
                 PreparedStatement pstmt2 = conn2.prepareStatement(usersql)) {
                     pstmt2.setString(1, userId);
                     ResultSet rsUser = pstmt2.executeQuery();
                     while (rsUser.next()) {
-                        System.out.println("does this work??");
+                        
                          fName = rsUser.getString("firstName");
                           lName = rsUser.getString("lastName");
                     
                 
                     User userX = new User(userId, fName, lName);
                     Post x = new Post(viewingPostId, postText, postDate, userX, 0, 0, false, false);
+                    
                     posts.add(x);
                     }
             }
             }
                     mv.addObject("posts", posts);
                     
-                    System.out.println("added");
                 }
                     
                 

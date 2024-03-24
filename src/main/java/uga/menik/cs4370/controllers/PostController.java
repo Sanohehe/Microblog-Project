@@ -121,25 +121,42 @@ public class PostController {
                         User userX = new User(commentUserId,commentFirstName, commentLastName);
 
                         Comment commentX = new Comment(postId, content, date, userX);
-                        commentList.add(commentX);
-
-                        
-                    
-                
-                    
-                    
+                        commentList.add(commentX); 
                     }
                 }
             }
-            Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, 0, commentCount, false, false, commentList);
+            Boolean isHeart = false;
+            int heartCount = 0;
+            final String heartSql = "select * from heart where postId = ?";
+            try (Connection connHeart = dataSource.getConnection();
+                PreparedStatement heartStmt = connHeart.prepareStatement(heartSql)) {
+                    heartStmt.setString(1, postId);
+                    ResultSet heartSet = heartStmt.executeQuery();
+                    while (heartSet.next()) {
+                    heartCount++;
                     
+                }
+
+                }
+                final String heartUserSql = "select * from heart where userId = ? AND postId = ?";
+                try (Connection connHeartUser = dataSource.getConnection();
+                PreparedStatement heartUserStmt = connHeartUser.prepareStatement(heartUserSql)) {
+                    heartUserStmt.setString(1, userService.getLoggedInUser().getUserId());
+                    heartUserStmt.setString(2, postId);
+                    ResultSet heartSet = heartUserStmt.executeQuery();
+                    while (heartSet.next()) {
+                    isHeart = true;
+                    
+                }
+
+                }
+            Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, heartCount, commentCount, isHeart, false, commentList);
             posts.add(newPost);
                 }
                     }
 
             }
                     }
-                    
                     
                 }
                 mv.addObject("posts", posts);
@@ -205,21 +222,38 @@ public class PostController {
      * See comments on webpage function to see how path variables work here.
      * See comments in PeopleController.java in followUnfollowUser function regarding 
      * get type form submissions and how path variables work.
+     * @throws SQLException 
      */
     @GetMapping("/{postId}/heart/{isAdd}")
     public String addOrRemoveHeart(@PathVariable("postId") String postId,
-            @PathVariable("isAdd") Boolean isAdd) {
+            @PathVariable("isAdd") Boolean isAdd) throws SQLException {
         System.out.println("The user is attempting add or remove a heart:");
         System.out.println("\tpostId: " + postId);
         System.out.println("\tisAdd: " + isAdd);
-
-        // Redirect the user if the comment adding is a success.
-        // return "redirect:/post/" + postId;
+        if (isAdd == false) {
+            final String deleteHeart = "delete from heart where postId = ? AND userId = ?";
+                            try (Connection conn3 = dataSource.getConnection();
+                                PreparedStatement deletingPstmt = conn3.prepareStatement(deleteHeart)) {
+                                    deletingPstmt.setString(2, userService.getLoggedInUser().getUserId());
+                                    deletingPstmt.setString(1, postId);
+                                    deletingPstmt.executeUpdate();
+                        }
+        } else {
+        final String heartSql = "insert into heart (postId, userId) values (?,?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement heartStmt = conn.prepareStatement(heartSql)) {
+                    heartStmt.setString(1, postId);
+                    heartStmt.setString(2, userService.getLoggedInUser().getUserId());
+                    heartStmt.executeUpdate();
+                }
+            }
+        //Redirect the user if the comment adding is a success.
+        return "redirect:/post/" + postId;
 
         // Redirect the user with an error message if there was an error.
-        String message = URLEncoder.encode("Failed to (un)like the post. Please try again.",
-                StandardCharsets.UTF_8);
-        return "redirect:/post/" + postId + "?error=" + message;
+        //String message = URLEncoder.encode("Failed to (un)like the post. Please try again.",
+               // StandardCharsets.UTF_8);
+        //return "redirect:/post/" + postId + "?error=" + message;
     }
 
     /**

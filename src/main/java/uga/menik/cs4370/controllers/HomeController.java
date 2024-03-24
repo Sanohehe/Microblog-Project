@@ -109,8 +109,33 @@ public class HomeController {
 
 
                 }
+                Boolean isHeart = false;
+                int heartCount = 0;
+                final String heartSql = "select * from heart where postId = ?";
+            try (Connection connHeart = dataSource.getConnection();
+                PreparedStatement heartStmt = connHeart.prepareStatement(heartSql)) {
+                    heartStmt.setString(1, viewingPostId);
+                    ResultSet heartSet = heartStmt.executeQuery();
+                    while (heartSet.next()) {
+                    heartCount++;
+                    
+                    }
+
+                }
+                final String heartUserSql = "select * from heart where userId = ? AND postId = ?";
+                try (Connection connHeartUser = dataSource.getConnection();
+                PreparedStatement heartUserStmt = connHeartUser.prepareStatement(heartUserSql)) {
+                    heartUserStmt.setString(1, userService.getLoggedInUser().getUserId());
+                    heartUserStmt.setString(2, viewingPostId);
+                    ResultSet heartSet = heartUserStmt.executeQuery();
+                    while (heartSet.next()) {
+                    isHeart = true;
+                    
+                }
+
+                }
                     User userX = new User(postUser, fName, lName);
-                    Post x = new Post(viewingPostId, postText, postDate, userX, 0, comments, false, false);
+                    Post x = new Post(viewingPostId, postText, postDate, userX, heartCount, comments, isHeart, false);
                     posts.add(x);
                     }
             }
@@ -151,7 +176,7 @@ public class HomeController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
         String parsedDate = l.format(formatter);
         System.out.println("User is creating post: " + postText);
-        Post x = new Post("1", postText, parsedDate, userService.getLoggedInUser(), 10, 4, false, false);
+        Post x = new Post("1", postText, parsedDate, userService.getLoggedInUser(), 0, 0, false, false);
         addPost(x.getUser().getUserId(), postText, x.getPostDate());
         // Redirect the user if the post creation is a success.
         return "redirect:/";

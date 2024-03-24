@@ -74,7 +74,7 @@ public class PeopleController {
 
         List<FollowableUser> followableUsers = peopleService.getFollowableUsers(id);
         mv.addObject("users", followableUsers);
-
+        
         // If an error occured, you can set the following property with the
         // error message to show the error message to the user.
         // An error message can be optionally specified with a url query parameter too.
@@ -102,6 +102,7 @@ public class PeopleController {
     @GetMapping("{userId}/follow/{isFollow}")
     public String followUnfollowUser(@PathVariable("userId") String userId,
             @PathVariable("isFollow") Boolean isFollow) throws SQLException {
+        
         System.out.println("User is attempting to follow/unfollow a user:");
         System.out.println("\tuserId: " + userId);
         System.out.println("\tisFollow: " + isFollow);
@@ -117,8 +118,6 @@ public class PeopleController {
                         String followeeUserId = rs.getString("followeeUSerId");
                         if (followerUserId.equals(userService.getLoggedInUser().getUserId()) && 
                         followeeUserId.equals(userId)) {
-                            isFollow = false;
-                            
                             //if the user is already following the selected user, then we change the operation
                             //to an unfollowing, by deleting the row in the follow table that describes the 
                             //following relationship between the two users.
@@ -129,6 +128,7 @@ public class PeopleController {
                                     deletingPstmt.setString(2, userId);
                                     deletingPstmt.executeUpdate();
                         }
+                        
                     }
                 }
         //if the users do not have a previous follow relationship in the follow table,

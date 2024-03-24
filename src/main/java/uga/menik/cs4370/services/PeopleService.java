@@ -41,15 +41,28 @@ public class PeopleService {
         // Write an SQL query to find the users that are not the current user.
        DataSource dataSource = this.dataSource;
        List<FollowableUser> followableUsers = new ArrayList<>();
+       Boolean followStatus = false;
        String noPostQuery = "select * from user where user.userId not in (select post.userId from post)";
                     try (Connection conn3 = dataSource.getConnection();
                 PreparedStatement pstmt3 = conn3.prepareStatement(noPostQuery)) {
+                    Boolean followStatusNoPosts = false;
                         ResultSet rs3 = pstmt3.executeQuery();
                           while(rs3.next()){
                             String userId = rs3.getString("userId");
                             String fName = rs3.getString("firstName");
                             String lName = rs3.getString("lastName");
-                            followableUsers.add(new FollowableUser(userId, fName, lName, false, "No Posts Yet"));
+                            final String followQuery = "select followerUserId from follow where followeeUserId = ?";
+                        try (Connection conn4 = dataSource.getConnection();
+                PreparedStatement pstmt4 = conn4.prepareStatement(followQuery)) {
+                        pstmt4.setString(1, userId);
+                        ResultSet followStatsRs = pstmt4.executeQuery();
+                        while(followStatsRs.next()) {
+                            if (followStatsRs.getString("followerUserID").equals(userIdToExclude)) {
+                                followStatusNoPosts = true;
+                            }
+                        }
+                    }
+                            followableUsers.add(new FollowableUser(userId, fName, lName, followStatusNoPosts,"No Posts Yet"));
                 }
                         
                 }
@@ -77,9 +90,22 @@ public class PeopleService {
                     pstmt2.setString(1, rs.getString("userId"));
                     ResultSet rs2 = pstmt2.executeQuery();
                     while (rs2.next()) {
+                        final String followQuery = "select followeeUserId from follow where followerUserId = ?";
+                        try (Connection conn3 = dataSource.getConnection();
+                PreparedStatement pstmt3 = conn3.prepareStatement(followQuery)) {
+                        pstmt3.setString(1, userIdToExclude);
+                        ResultSet followStatsRs = pstmt3.executeQuery();
+                        followStatus = false;
+                        while(followStatsRs.next()) {
+                            if (followStatsRs.getString("followeeUserID").equals(userId)) {
+                                followStatus = true;
+                            }
+                        }
+                }
+
                         //add the users into the following list
                         followableUsers.add(new FollowableUser(userId, firstName,
-                        lastName, false, rs2.getString("postDate") ));
+                        lastName, followStatus, rs2.getString("postDate") ));
                     }
 
                 }
