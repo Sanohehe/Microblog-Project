@@ -95,10 +95,22 @@ public class HomeController {
                     while (rsUser.next()) {
                          fName = rsUser.getString("firstName");
                           lName = rsUser.getString("lastName");
-                    
-                
+                    String commentCount = "";
+                    int comments = 0;
+                    final String commentCountSql = "select COUNT(commentId) from comment where postId = ?";
+                    try (Connection conn3 = dataSource.getConnection();
+                PreparedStatement pstmt3 = conn3.prepareStatement(commentCountSql)) {
+                    pstmt3.setString(1, viewingPostId);
+                    ResultSet rsComment = pstmt3.executeQuery();
+                    while(rsComment.next()) {
+                    commentCount = rsComment.getString("COUNT(commentID)");
+                    comments = Integer.valueOf(commentCount);
+                    }
+
+
+                }
                     User userX = new User(postUser, fName, lName);
-                    Post x = new Post(viewingPostId, postText, postDate, userX, 0, 0, false, false);
+                    Post x = new Post(viewingPostId, postText, postDate, userX, 0, comments, false, false);
                     posts.add(x);
                     }
             }

@@ -11,6 +11,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.servlet.ModelAndView;
 
 import uga.menik.cs4370.models.BasicPost;
+import uga.menik.cs4370.models.Comment;
 import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
@@ -65,15 +68,17 @@ public class PostController {
         System.out.println("The user is attempting to view post with id: " + postId);
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("posts_page");
-
+        
+        List<Post> posts = new ArrayList<>();
         // Following line populates sample data.
         // You should replace it with actual data from the database.
+        
         final String sql2 = "select * from post where postId = ?";
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql2)) {
                     pstmt.setString(1, postId);
-                    List<Post> posts = new ArrayList<>();
+                    
                     ResultSet rs = pstmt.executeQuery();
                     while (rs.next()) {
                     String viewingPostId = rs.getString("postId");
@@ -91,18 +96,53 @@ public class PostController {
                     String fName = rsUser.getString("firstName");
                     String lName = rsUser.getString("lastName");
                     User x = new User(userId, fName, lName);
+                    System.out.println("testing.....");
+                    final String commentSql = "select * from comment where comment.postId = ? ORDER BY commentDate DESC";
+                try (Connection connComment = dataSource.getConnection();
+                PreparedStatement commentStmt = connComment.prepareStatement(commentSql)) {
+                    commentStmt.setString(1, postId);
+                    ResultSet commentSet = commentStmt.executeQuery();
+                    int commentCount = 0;
+                    List<Comment> commentList = new ArrayList<>();
+                    while(commentSet.next()) {
+                        commentCount++;
+                        String content = commentSet.getString("commentText");
+                        String date = commentSet.getString("commentDate");
+                        String commentUserId = commentSet.getString("userID");
+                        
+                    try (Connection conn3 = dataSource.getConnection();
+                PreparedStatement pstmt3 = conn3.prepareStatement(usersql)) {
+                    pstmt3.setString(1, commentUserId);
+                    ResultSet rsCommentUser = pstmt3.executeQuery();
+
+                    while (rsCommentUser.next()) {
+                        String commentFirstName = rsCommentUser.getString("firstName");
+                        String commentLastName = rsCommentUser.getString("lastName");
+                        User userX = new User(commentUserId,commentFirstName, commentLastName);
+
+                        Comment commentX = new Comment(postId, content, date, userX);
+                        commentList.add(commentX);
+
+                        
                     
                 
-                    Post newPost = new Post(viewingPostId, postText, postDate, x, 0, 0, false, false);
                     
-                    posts.add(newPost);
+                    
                     }
+                }
+            }
+            Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, 0, commentCount, false, false, commentList);
+                    
+            posts.add(newPost);
+                }
+                    }
+
             }
                     }
-                    mv.addObject("posts", posts);
+                    
                     
                 }
-
+                mv.addObject("posts", posts);
         
 
         // If an error occured, you can set the following property with the
@@ -115,6 +155,9 @@ public class PostController {
         // Do that if your content list is empty.
         // mv.addObject("isNoContent", true);
 
+        
+            
+        
         return mv;
     }
 
@@ -123,21 +166,38 @@ public class PostController {
      * See comments on webpage function to see how path variables work here.
      * This function handles form posts.
      * See comments in HomeController.java regarding form submissions.
+     * @throws SQLException 
      */
     @PostMapping("/{postId}/comment")
     public String postComment(@PathVariable("postId") String postId,
-            @RequestParam(name = "comment") String comment) {
+            @RequestParam(name = "comment") String comment) throws SQLException {
         System.out.println("The user is attempting add a comment:");
         System.out.println("\tpostId: " + postId);
         System.out.println("\tcomment: " + comment);
 
+        LocalDateTime l = java.time.LocalDateTime.now();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
+        String parsedDate = l.format(formatter);
+        final String commentSql = "insert into comment (postId, userId, commentDate, commentText) values (?,?,?,?)";
+        try (Connection conn = dataSource.getConnection();
+                PreparedStatement commentStmt = conn.prepareStatement(commentSql)) {
+            commentStmt.setString(1, postId);
+            commentStmt.setString(2, userService.getLoggedInUser().getUserId());
+            commentStmt.setString(3, parsedDate);
+            commentStmt.setString(4, comment);
+
+            // Execute the statement and check if rows are affected.
+            int rowsAffected = commentStmt.executeUpdate();
+            
+        }
+
         // Redirect the user if the comment adding is a success.
-        // return "redirect:/post/" + postId;
+        return "redirect:/post/" + postId;
 
         // Redirect the user with an error message if there was an error.
-        String message = URLEncoder.encode("Failed to post the comment. Please try again.",
-                StandardCharsets.UTF_8);
-        return "redirect:/post/" + postId + "?error=" + message;
+        //String message = URLEncoder.encode("Failed to post the comment. Please try again.",
+               // StandardCharsets.UTF_8);
+        //return "redirect:/post/" + postId + "?error=" + message;
     }
 
     /**

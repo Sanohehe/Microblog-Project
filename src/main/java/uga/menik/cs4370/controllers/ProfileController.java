@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import javax.sql.DataSource;
 
@@ -72,7 +73,9 @@ public class ProfileController {
         
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("posts_page");
-
+       
+        
+        
         // Following line populates sample data.
         // You should replace it with actual data from the database.
         
@@ -89,6 +92,7 @@ public class ProfileController {
                     ResultSet rs = pstmt.executeQuery();
                     while (rs.next()) {
                     viewingPostId = rs.getString("postId");
+                    System.out.println("postId:" + viewingPostId);
                     postDate = rs.getString("postDate");
                     postText = rs.getString("postText");
                     
@@ -102,6 +106,7 @@ public class ProfileController {
                     pstmt2.setString(1, userId);
                     ResultSet rsUser = pstmt2.executeQuery();
                     while (rsUser.next()) {
+                        System.out.println("does this work??");
                          fName = rsUser.getString("firstName");
                           lName = rsUser.getString("lastName");
                     
@@ -113,6 +118,8 @@ public class ProfileController {
             }
             }
                     mv.addObject("posts", posts);
+                    
+                    System.out.println("added");
                 }
                     
                 
@@ -126,7 +133,8 @@ public class ProfileController {
 
         // Enable the following line if you want to show no content message.
         // Do that if your content list is empty.
-        // mv.addObject("isNoContent", true);
+        //mv.addObject("isNoContent", true);
+        
         
         return mv;
     }
