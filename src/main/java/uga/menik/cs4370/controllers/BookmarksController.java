@@ -62,6 +62,7 @@ public class BookmarksController {
         // You should replace it with actual data from the database.
         List<Post> posts = new ArrayList<>();
         
+        //Query to find posts that the user has bookmarked
         final String sql = "select post.postId, post.userId, postDate, postText from post,bookmark where bookmark.userId = ?  AND bookmark.postId = post.postId";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {

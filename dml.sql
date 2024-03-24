@@ -104,4 +104,7 @@ delete from follow where followerUserId = ? AND followeeUserId = ?
 --Found in PeopleController and corresponds to http://localhost:8081/people/{userID}/follow/true
 insert ignore into follow (followerUserId, followeeUserId) values (?, ?)
 
+--Query that finds the post information of posts that the user has 
+select post.postId, post.userId, postDate, postText from post,bookmark where bookmark.userId = ?  AND bookmark.postId = post.postId
+
 
