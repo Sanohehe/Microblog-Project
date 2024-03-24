@@ -11,7 +11,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.sql.Statement;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -29,9 +29,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
-import uga.menik.cs4370.services.PeopleService;
 import uga.menik.cs4370.services.UserService;
-import uga.menik.cs4370.utility.Utility;
 
 /**
  * This controller handles the home page and some of it's sub URLs.
@@ -176,31 +174,73 @@ public class HomeController {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
         String parsedDate = l.format(formatter);
         System.out.println("User is creating post: " + postText);
-        Post x = new Post("1", postText, parsedDate, userService.getLoggedInUser(), 0, 0, false, false);
-        addPost(x.getUser().getUserId(), postText, x.getPostDate());
-        // Redirect the user if the post creation is a success.
-        return "redirect:/";
-        
 
-        // Redirect the user with an error message if there was an error.
-        //String message = URLEncoder.encode("Failed to create the post. Please try again.",
-                //StandardCharsets.UTF_8);
-        //return "redirect:/?error=" + message;
+        // Extract user ID from the logged-in user
+        String userId = userService.getLoggedInUser().getUserId();
+
+        // Add post to database and get post ID
+        int postId = addPost(userId, postText, parsedDate);
+
+        if (postId > 0) {
+            // If the post was added, extract hashtags
+            List<String> hashtags = extractHashtags(postText);
+            addHashtags(postId, hashtags);
+            return "redirect:/";
+        } else {
+            // Error case
+            String message = URLEncoder.encode("Failed to create the post. Please try again.", StandardCharsets.UTF_8);
+            return "redirect:/?error=" + message;
+        }
+
     }
 
-    public boolean addPost(String userID, String postText, String date) throws SQLException {
-        final String registerSql = "insert into post (userId, postDate, postText) values (?, ?, ?)";
+    private int addPost(String userID, String postText, String date) throws SQLException {
+        final String insertPostSql = "INSERT INTO post (userId, postDate, postText) VALUES (?, ?, ?)";
 
         try (Connection conn = dataSource.getConnection();
-                PreparedStatement registerStmt = conn.prepareStatement(registerSql)) {
-            registerStmt.setString(1, userID);
-            registerStmt.setString(2, date);
-            registerStmt.setString(3, postText);
+            PreparedStatement insertPostStmt = conn.prepareStatement(insertPostSql, Statement.RETURN_GENERATED_KEYS)) {
+            insertPostStmt.setString(1, userID);
+            insertPostStmt.setString(2, date);
+            insertPostStmt.setString(3, postText);
+            int rowsAffected = insertPostStmt.executeUpdate();
 
-            // Execute the statement and check if rows are affected.
-            int rowsAffected = registerStmt.executeUpdate();
-            return rowsAffected > 0;
+            if (rowsAffected > 0) {
+                try (ResultSet generatedKeys = insertPostStmt.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        return generatedKeys.getInt(1); // Return the generated post ID
+                    }
+                }
+            }
         }
-        
+        return -1; // Return an invalid ID if insertion failed
     }
+
+
+    private void addHashtags(int postId, List<String> hashtags) throws SQLException {
+        final String insertHashtagSql = "INSERT INTO hashtag (hashTag, postId) VALUES (?, ?)";
+    
+        try (Connection conn = dataSource.getConnection();
+             PreparedStatement insertHashtagStmt = conn.prepareStatement(insertHashtagSql)) {
+            for (String hashtag : hashtags) {
+                insertHashtagStmt.setString(1, hashtag);
+                insertHashtagStmt.setInt(2, postId);
+                insertHashtagStmt.executeUpdate();
+            }
+        }
+    }
+
+    private List<String> extractHashtags(String content) {
+        List<String> hashtags = new ArrayList<>();
+        // Split the content by spaces
+        String[] words = content.split("\\s+");
+        // Iterate over words to find hashtags
+        for (String word : words) {
+            // If a word starts with a hashtag, add it to the list
+            if (word.startsWith("#") && word.length() > 1) {
+                hashtags.add(word.substring(1)); // Remove the '#' when adding
+            }
+        }
+        return hashtags;
+    }
+
 }
