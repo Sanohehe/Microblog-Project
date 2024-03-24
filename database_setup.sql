@@ -72,3 +72,41 @@ create table if not exists follow (
     foreign key(followeeUSerId) references user(userId)
 )
 
+--insert sample data
+
+--bookmark
+
+--comment
+insert into comment (commentId, postId, userId, commentDate, commentText) values (1, 14, 1, "Mar 23, 2024, 08:14 PM", 
+"this is my first test comment")
+insert into comment (commentId, postId, userId, commentDate, commentText) values (2, 11, 1, "Mar 23, 2024, 09:13 PM", 
+"Hey Jill! I aslo love cats")
+insert into comment (commentId, postId, userId, commentDate, commentText) values (3, 14, 1, "Mar 23, 2024, 09:15 PM", 
+"this is my second test comment, at a different time")
+insert into comment (commentId, postId, userId, commentDate, commentText) values (4, 14, 1, "Mar 23, 2024, 09:17 PM", 
+"this is a third comment!")
+insert into comment (commentId, postId, userId, commentDate, commentText) values (5, 13, 1, "Mar 24, 2024, 12:20 AM", 
+"Hey!")
+
+--follow
+insert into follow (followerUserId, followeeUserId) values (2, 1)
+insert into follow (followerUserId, followeeUserId) values (4, 1)
+insert into follow (followerUserId, followeeUserId) values (1, 2)
+insert into follow (followerUserId, followeeUserId) values (4, 2)
+insert into follow (followerUserId, followeeUserId) values (1, 3)
+insert into follow (followerUserId, followeeUserId) values (2, 3)
+insert into follow (followerUserId, followeeUserId) values (4, 3)
+insert into follow (followerUserId, followeeUserId) values (1, 4)
+insert into follow (followerUserId, followeeUserId) values (2, 4)
+insert into follow (followerUserId, followeeUserId) values (1, 5)
+
+--hashtag
+
+--heart
+insert into heart (postId, userID) values (11, 1)
+insert into heart (postId, userID) values (13, 1)
+insert into heart (postId, userID) values (14, 1)
+insert into heart (postId, userID) values (11, 4)
+insert into heart (postId, userID) values (14, 4)
+
+--post
