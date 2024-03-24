@@ -26,7 +26,7 @@ create table if not exists post (
     primary key(postId),
     foreign key(userID) references user(userId)
     
-)
+);
 
 create table if not exists comment (
     commentId int auto_increment,
@@ -38,7 +38,7 @@ create table if not exists comment (
     foreign key(userId) references user(userId),
     foreign key(postId) references post(postId)
 
-)
+);
 
 
 create table if not exists heart (
@@ -47,7 +47,7 @@ create table if not exists heart (
     primary key(postId, userId),
     foreign key(userId) references user(userId),
     foreign key(postId) references post(postId)
-)
+);
 
 create table if not exists bookmark (
     postId int not null,
@@ -55,14 +55,14 @@ create table if not exists bookmark (
     primary key(postId, userId),
     foreign key(userId) references user(userId),
     foreign key(postId) references post(postId)
-)
+);
 
 create table if not exists hashtag (
     hashTag varchar(255),
     postId int not null,
     primary key(hashTag, postId),
     foreign key(postId) references post(postId)
-)
+);
 
 create table if not exists follow (
     followerUserId int,
@@ -70,5 +70,5 @@ create table if not exists follow (
     primary key(followerUserId, followeeUserId),
     foreign key(followerUserId) references user(userId),
     foreign key(followeeUSerId) references user(userId)
-)
+);
 
