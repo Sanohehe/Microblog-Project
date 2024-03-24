@@ -128,7 +128,11 @@ public class PeopleController {
                                     deletingPstmt.setString(2, userId);
                                     deletingPstmt.executeUpdate();
                         }
-                        
+                        catch (SQLException e) {
+                            String message = URLEncoder.encode("Failed to (un)follow the user. Please try again.",
+                            StandardCharsets.UTF_8);
+                    return "redirect:/people?error=" + message;
+                        }
                     }
                 }
         //if the users do not have a previous follow relationship in the follow table,
@@ -142,6 +146,11 @@ public class PeopleController {
                 followerStmt.setString(2, userId);
                 followerStmt.executeUpdate();
         }
+        catch (SQLException e) {
+            String message = URLEncoder.encode("Failed to (un)follow the user. Please try again.",
+                StandardCharsets.UTF_8);
+        return "redirect:/people?error=" + message;
+        }
     }
         
 
@@ -149,10 +158,7 @@ public class PeopleController {
         
         return "redirect:/people";
 
-        // Redirect the user with an error message if there was an error.
-        //String message = URLEncoder.encode("Failed to (un)follow the user. Please try again.",
-                //StandardCharsets.UTF_8);
-        //return "redirect:/people?error=" + message;
+        
     }
 
 }

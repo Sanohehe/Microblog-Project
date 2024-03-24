@@ -75,13 +75,8 @@ public class ProfileController {
         
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("posts_page");
-       
-        
-        
         // Following line populates sample data.
         // You should replace it with actual data from the database.
-        
-        
          final String sql2 = "select * from post where userId = ? ORDER BY postDate DESC";
         //first sql query that grabs the data from the post table.
         try (Connection conn = dataSource.getConnection();
@@ -97,43 +92,39 @@ public class ProfileController {
                     System.out.println("postId:" + viewingPostId);
                     postDate = rs.getString("postDate");
                     postText = rs.getString("postText");
-                    
                     String fName ="";
                     String lName ="";
                     final String usersql = "select * from user where userId = ?";
                     //second sql query that identifies the user whose profile is clicked on.
-                   
                     try (Connection conn2 = dataSource.getConnection();
                 PreparedStatement pstmt2 = conn2.prepareStatement(usersql)) {
                     pstmt2.setString(1, userId);
                     ResultSet rsUser = pstmt2.executeQuery();
                     while (rsUser.next()) {
-                        
                          fName = rsUser.getString("firstName");
                           lName = rsUser.getString("lastName");
                           int commentCount = 0;
                           List<Comment> commentList = new ArrayList<>();
+                          //finds all the comments related to the posts on the user's profile
                           final String commentSql = "select * from comment where comment.postId = ? ORDER BY commentDate DESC";
                           try (Connection connComment = dataSource.getConnection();
                           PreparedStatement commentStmt = connComment.prepareStatement(commentSql)) {
                               commentStmt.setString(1, viewingPostId);
                               ResultSet commentSet = commentStmt.executeQuery();
-                              
                               while(commentSet.next()) {
                                   commentCount++;
                                   String content = commentSet.getString("commentText");
                                   String date = commentSet.getString("commentDate");
                                   String commentUserId = commentSet.getString("userID");
                                   try (Connection conn3 = dataSource.getConnection();
+                                  //Query to find the user who left the comments
                 PreparedStatement pstmt3 = conn3.prepareStatement(usersql)) {
                     pstmt3.setString(1, commentUserId);
                     ResultSet rsCommentUser = pstmt3.executeQuery();
-
                     while (rsCommentUser.next()) {
                         String commentFirstName = rsCommentUser.getString("firstName");
                         String commentLastName = rsCommentUser.getString("lastName");
                         User userX = new User(commentUserId,commentFirstName, commentLastName);
-
                         Comment commentX = new Comment(viewingPostId, content, date, userX);
                         commentList.add(commentX); 
                     }
@@ -142,6 +133,7 @@ public class ProfileController {
                 }
                 Boolean isHeart = false;
                 int heartCount = 0;
+                //Query to find how many hearts are on a post
                 final String heartSql = "select * from heart where postId = ?";
                 try (Connection connHeart = dataSource.getConnection();
                     PreparedStatement heartStmt = connHeart.prepareStatement(heartSql)) {
@@ -153,6 +145,7 @@ public class ProfileController {
                     }
     
                     }
+                    //Query to find if the logged in user has hearted the post
                     final String heartUserSql = "select * from heart where userId = ? AND postId = ?";
                     try (Connection connHeartUser = dataSource.getConnection();
                     PreparedStatement heartUserStmt = connHeartUser.prepareStatement(heartUserSql)) {
@@ -167,10 +160,7 @@ public class ProfileController {
                     }
                     User userX = new User(userId, fName, lName);
                     Post x = new ExpandedPost(viewingPostId, postText, postDate, userX, heartCount, commentCount, isHeart, false, commentList);
-                    
-                    posts.add(x);
-                              
-                            
+                    posts.add(x);   
                     }
             }
             }
@@ -184,8 +174,8 @@ public class ProfileController {
 
         // If an error occured, you can set the following property with the
         // error message to show the error message to the user.
-        // String errorMessage = "Some error occured!";
-        // mv.addObject("errorMessage", errorMessage);
+        //String errorMessage = "Some error occured!";
+        //mv.addObject("errorMessage", errorMessage);
 
         // Enable the following line if you want to show no content message.
         // Do that if your content list is empty.

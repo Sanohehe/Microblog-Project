@@ -42,6 +42,7 @@ public class PeopleService {
        DataSource dataSource = this.dataSource;
        List<FollowableUser> followableUsers = new ArrayList<>();
        Boolean followStatus = false;
+       //query to find users 
        String noPostQuery = "select * from user where user.userId not in (select post.userId from post)";
                     try (Connection conn3 = dataSource.getConnection();
                 PreparedStatement pstmt3 = conn3.prepareStatement(noPostQuery)) {
@@ -51,6 +52,7 @@ public class PeopleService {
                             String userId = rs3.getString("userId");
                             String fName = rs3.getString("firstName");
                             String lName = rs3.getString("lastName");
+                            //Query to find if the logged in user follows another user
                             final String followQuery = "select followerUserId from follow where followeeUserId = ?";
                         try (Connection conn4 = dataSource.getConnection();
                 PreparedStatement pstmt4 = conn4.prepareStatement(followQuery)) {
@@ -66,13 +68,13 @@ public class PeopleService {
                 }
                         
                 }
+                //query to find the users that are not the current user
         String query = "select * from user where userID != ?";
         String userId ="";
         String firstName ="";
         String lastName ="";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(query)) {
-
                     pstmt.setString(1, userIdToExclude);       
             try (ResultSet rs = pstmt.executeQuery()) {
                 // Traverse the result rows one at a time.
@@ -82,7 +84,6 @@ public class PeopleService {
                     userId = rs.getString("userId");
                     firstName = rs.getString("firstName");
                     lastName = rs.getString("lastName");
-                    
                 //finds the most recent post time if the user has posted.
                     String postQuery = "select MAX(postDate) as postDate from post group by userId having userId = ?;";
         try (Connection conn2 = dataSource.getConnection();
@@ -90,6 +91,7 @@ public class PeopleService {
                     pstmt2.setString(1, rs.getString("userId"));
                     ResultSet rs2 = pstmt2.executeQuery();
                     while (rs2.next()) {
+                        //Query to find if the user already follows another user
                         final String followQuery = "select followeeUserId from follow where followerUserId = ?";
                         try (Connection conn3 = dataSource.getConnection();
                 PreparedStatement pstmt3 = conn3.prepareStatement(followQuery)) {
@@ -102,7 +104,6 @@ public class PeopleService {
                             }
                         }
                 }
-
                         //add the users into the following list
                         followableUsers.add(new FollowableUser(userId, firstName,
                         lastName, followStatus, rs2.getString("postDate") ));

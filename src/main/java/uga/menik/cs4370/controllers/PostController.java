@@ -73,20 +73,19 @@ public class PostController {
         // Following line populates sample data.
         // You should replace it with actual data from the database.
         
+        //grabs userId, postId, postDate, and postText from the database
         final String sql2 = "select * from post where postId = ?";
 
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql2)) {
                     pstmt.setString(1, postId);
-                    
                     ResultSet rs = pstmt.executeQuery();
                     while (rs.next()) {
                     String viewingPostId = rs.getString("postId");
-                    
-                    
                     String postDate = rs.getString("postDate");
                     String postText = rs.getString("postText");
                     String userId = rs.getString("userId");
+                    //Query to identify which user made the post
                     final String usersql = "select * from user where userId = ?";
                     try (Connection conn2 = dataSource.getConnection();
                 PreparedStatement pstmt2 = conn2.prepareStatement(usersql)) {
@@ -95,8 +94,10 @@ public class PostController {
                     while (rsUser.next()) {
                     String fName = rsUser.getString("firstName");
                     String lName = rsUser.getString("lastName");
+                    //creates a new user to display for the post based on the data from the user table
                     User x = new User(userId, fName, lName);
-                    
+                    //Query to indentify all the comments related to a patrticular postId
+                    //Ordering by date descending makes the comments appear most recent to last
                     final String commentSql = "select * from comment where comment.postId = ? ORDER BY commentDate DESC";
                     int commentCount = 0;
                     List<Comment> commentList = new ArrayList<>();
@@ -104,18 +105,16 @@ public class PostController {
                 PreparedStatement commentStmt = connComment.prepareStatement(commentSql)) {
                     commentStmt.setString(1, postId);
                     ResultSet commentSet = commentStmt.executeQuery();
-                    
                     while(commentSet.next()) {
                         commentCount++;
                         String content = commentSet.getString("commentText");
                         String date = commentSet.getString("commentDate");
                         String commentUserId = commentSet.getString("userID");
-                        
                     try (Connection conn3 = dataSource.getConnection();
+                    //reuses the user query from above to find the user of the comment
                 PreparedStatement pstmt3 = conn3.prepareStatement(usersql)) {
                     pstmt3.setString(1, commentUserId);
                     ResultSet rsCommentUser = pstmt3.executeQuery();
-
                     while (rsCommentUser.next()) {
                         String commentFirstName = rsCommentUser.getString("firstName");
                         String commentLastName = rsCommentUser.getString("lastName");
@@ -129,6 +128,7 @@ public class PostController {
         }
             Boolean isHeart = false;
             int heartCount = 0;
+            //query to find the count of hearts on a post
             final String heartSql = "select * from heart where postId = ?";
             try (Connection connHeart = dataSource.getConnection();
                 PreparedStatement heartStmt = connHeart.prepareStatement(heartSql)) {
@@ -140,6 +140,7 @@ public class PostController {
                 }
 
                 }
+                //Query to find if the logged in user has hearted the post
                 final String heartUserSql = "select * from heart where userId = ? AND postId = ?";
                 try (Connection connHeartUser = dataSource.getConnection();
                 PreparedStatement heartUserStmt = connHeartUser.prepareStatement(heartUserSql)) {
@@ -154,7 +155,6 @@ public class PostController {
                 }
             Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, heartCount, commentCount, isHeart, false, commentList);
             posts.add(newPost);
-                
                     }
 
             }
@@ -162,21 +162,14 @@ public class PostController {
                     
                 }
                 mv.addObject("posts", posts);
-        
-
         // If an error occured, you can set the following property with the
         // error message to show the error message to the user.
         // An error message can be optionally specified with a url query parameter too.
         String errorMessage = error;
         mv.addObject("errorMessage", errorMessage);
-
         // Enable the following line if you want to show no content message.
         // Do that if your content list is empty.
         // mv.addObject("isNoContent", true);
-
-        
-            
-        
         return mv;
     }
 
@@ -193,7 +186,7 @@ public class PostController {
         System.out.println("The user is attempting add a comment:");
         System.out.println("\tpostId: " + postId);
         System.out.println("\tcomment: " + comment);
-
+        int rowsAffected = 0;
         LocalDateTime l = java.time.LocalDateTime.now();
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("MMM dd, yyyy, hh:mm a");
         String parsedDate = l.format(formatter);
@@ -206,17 +199,21 @@ public class PostController {
             commentStmt.setString(4, comment);
 
             // Execute the statement and check if rows are affected.
-            int rowsAffected = commentStmt.executeUpdate();
+            rowsAffected = commentStmt.executeUpdate();
+
             
         }
 
+        if (rowsAffected > 0) {
         // Redirect the user if the comment adding is a success.
         return "redirect:/post/" + postId;
+    } else {
 
         // Redirect the user with an error message if there was an error.
-        //String message = URLEncoder.encode("Failed to post the comment. Please try again.",
-               // StandardCharsets.UTF_8);
-        //return "redirect:/post/" + postId + "?error=" + message;
+        String message = URLEncoder.encode("Failed to post the comment. Please try again.",
+                StandardCharsets.UTF_8);
+        return "redirect:/post/" + postId + "?error=" + message;
+    }
     }
 
     /**
@@ -232,15 +229,23 @@ public class PostController {
         System.out.println("The user is attempting add or remove a heart:");
         System.out.println("\tpostId: " + postId);
         System.out.println("\tisAdd: " + isAdd);
+        //cheks if the user has alreeady hearted the post
         if (isAdd == false) {
+            //deletes the record of a user hearting the post
             final String deleteHeart = "delete from heart where postId = ? AND userId = ?";
-                            try (Connection conn3 = dataSource.getConnection();
+                            try (Connection conn3 = dataSource.getConnection(); 
                                 PreparedStatement deletingPstmt = conn3.prepareStatement(deleteHeart)) {
                                     deletingPstmt.setString(2, userService.getLoggedInUser().getUserId());
                                     deletingPstmt.setString(1, postId);
                                     deletingPstmt.executeUpdate();
                         }
+                     catch (SQLException e) {
+                        String message = URLEncoder.encode("Failed to (un)like the post. Please try again.",
+                        StandardCharsets.UTF_8);
+                        return "redirect:/post/" + postId + "?error=" + message;
+                    }
         } else {
+        //if the user has not already liked the post, then insert the record into the database
         final String heartSql = "insert into heart (postId, userId) values (?,?)";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement heartStmt = conn.prepareStatement(heartSql)) {
@@ -248,14 +253,16 @@ public class PostController {
                     heartStmt.setString(2, userService.getLoggedInUser().getUserId());
                     heartStmt.executeUpdate();
                 }
+                catch(SQLException e) {
+                    String message = URLEncoder.encode("Failed to (un)like the post. Please try again.",
+                    StandardCharsets.UTF_8);
+                    return "redirect:/post/" + postId + "?error=" + message;
+                }
             }
         //Redirect the user if the comment adding is a success.
         return "redirect:/post/" + postId;
-
-        // Redirect the user with an error message if there was an error.
-        //String message = URLEncoder.encode("Failed to (un)like the post. Please try again.",
-               // StandardCharsets.UTF_8);
-        //return "redirect:/post/" + postId + "?error=" + message;
+        
+        
     }
 
     /**

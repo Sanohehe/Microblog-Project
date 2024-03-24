@@ -77,36 +77,67 @@ create table if not exists follow (
 --bookmark
 
 --comment
-insert into comment (commentId, postId, userId, commentDate, commentText) values (1, 14, 1, "Mar 23, 2024, 08:14 PM", 
-"this is my first test comment")
-insert into comment (commentId, postId, userId, commentDate, commentText) values (2, 11, 1, "Mar 23, 2024, 09:13 PM", 
-"Hey Jill! I aslo love cats")
-insert into comment (commentId, postId, userId, commentDate, commentText) values (3, 14, 1, "Mar 23, 2024, 09:15 PM", 
-"this is my second test comment, at a different time")
-insert into comment (commentId, postId, userId, commentDate, commentText) values (4, 14, 1, "Mar 23, 2024, 09:17 PM", 
-"this is a third comment!")
-insert into comment (commentId, postId, userId, commentDate, commentText) values (5, 13, 1, "Mar 24, 2024, 12:20 AM", 
-"Hey!")
+insert into comment (commentId, postId, userId, commentDate, commentText) values 
+(1, 14, 1, "Mar 23, 2024, 08:14 PM", 
+"this is my first test comment"),
+ (2, 11, 1, "Mar 23, 2024, 09:13 PM", 
+"Hey Jill! I aslo love cats"),
+ (3, 14, 1, "Mar 23, 2024, 09:15 PM", 
+"this is my second test comment, at a different time"),
+ (4, 14, 1, "Mar 23, 2024, 09:17 PM", 
+"this is a third comment!"),
+ (5, 13, 1, "Mar 24, 2024, 12:20 AM", 
+"Hey!");
 
 --follow
-insert into follow (followerUserId, followeeUserId) values (2, 1)
-insert into follow (followerUserId, followeeUserId) values (4, 1)
-insert into follow (followerUserId, followeeUserId) values (1, 2)
-insert into follow (followerUserId, followeeUserId) values (4, 2)
-insert into follow (followerUserId, followeeUserId) values (1, 3)
-insert into follow (followerUserId, followeeUserId) values (2, 3)
-insert into follow (followerUserId, followeeUserId) values (4, 3)
-insert into follow (followerUserId, followeeUserId) values (1, 4)
-insert into follow (followerUserId, followeeUserId) values (2, 4)
-insert into follow (followerUserId, followeeUserId) values (1, 5)
+insert into follow (followerUserId, followeeUserId) values 
+(2, 1),
+ (4, 1),
+ (1, 2),
+ (4, 2),
+ (1, 3),
+ (2, 3),
+ (4, 3),
+ (1, 4),
+ (2, 4),
+ (1, 5);
 
 --hashtag
+insert into hashtag (hashTag, postId) values 
+ ("cats", 15),
+ ("dogs", 15),
+ ("test", 15),
+ ("cats", 10),
+ ("dogs", 10),
+ ("cats", 11),
+ ("books", 11),
+ ("books", 12),
+ ("dogs", 12);
+
 
 --heart
-insert into heart (postId, userID) values (11, 1)
-insert into heart (postId, userID) values (13, 1)
-insert into heart (postId, userID) values (14, 1)
-insert into heart (postId, userID) values (11, 4)
-insert into heart (postId, userID) values (14, 4)
+insert into heart (postId, userID) values 
+(11, 1),
+(13, 1),
+(14, 1),
+(11, 4),
+(14, 4);
+
 
 --post
+insert into post (postId, userId, postDate, postText) values
+(9,1,"Mar 20, 2024, 6:42 PM", "Hi! I am Brandon #test"),
+(10,2,"Mar 20, 2024, 6:42 PM", "Hi! I am James i love #cats and #dogs"),
+(11,3,"Mar 20, 2024, 6:43 PM", "Hi! I am Jill. i love #cats and #books"),
+(12,4,"Mar 20, 2024, 6:43 PM", "Hi! I am Sam! i love #books and #dogs"),
+(13,1,"Mar 20, 2024, 6:50 PM", "This is a second post from me, at a different time! #test"),
+(14,2,"Mar 20, 2024, 7:39 PM", "This is a second post by me, James. #test"),
+(15,1,"Mar 24, 2024, 1:41 PM", "#cats #test #dogs");
+
+--user
+insert into user (userId, username, password, firstName, lastName) values
+(1, "bbarnes30", "glass888", "Brandon", "Barnes"),
+(2, "J_Jackson", "password123", "John", "Jackson"),
+(3, "J_Jameson", "password456", "Jill", "Jameson"),
+(1, "S_Sin", "password789", "Sam", "Sinai"),
+(1, "D_Awesome", "password000", "Dude", "Awesome");
