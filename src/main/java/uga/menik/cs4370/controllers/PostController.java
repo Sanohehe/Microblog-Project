@@ -96,14 +96,15 @@ public class PostController {
                     String fName = rsUser.getString("firstName");
                     String lName = rsUser.getString("lastName");
                     User x = new User(userId, fName, lName);
-                    System.out.println("testing.....");
+                    
                     final String commentSql = "select * from comment where comment.postId = ? ORDER BY commentDate DESC";
+                    int commentCount = 0;
+                    List<Comment> commentList = new ArrayList<>();
                 try (Connection connComment = dataSource.getConnection();
                 PreparedStatement commentStmt = connComment.prepareStatement(commentSql)) {
                     commentStmt.setString(1, postId);
                     ResultSet commentSet = commentStmt.executeQuery();
-                    int commentCount = 0;
-                    List<Comment> commentList = new ArrayList<>();
+                    
                     while(commentSet.next()) {
                         commentCount++;
                         String content = commentSet.getString("commentText");
@@ -125,6 +126,7 @@ public class PostController {
                     }
                 }
             }
+        }
             Boolean isHeart = false;
             int heartCount = 0;
             final String heartSql = "select * from heart where postId = ?";
@@ -152,7 +154,7 @@ public class PostController {
                 }
             Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, heartCount, commentCount, isHeart, false, commentList);
             posts.add(newPost);
-                }
+                
                     }
 
             }

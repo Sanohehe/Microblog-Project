@@ -22,6 +22,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.ModelAndView;
 
+import uga.menik.cs4370.models.Comment;
+import uga.menik.cs4370.models.ExpandedPost;
 import uga.menik.cs4370.models.Post;
 import uga.menik.cs4370.models.User;
 import uga.menik.cs4370.services.UserService;
@@ -109,12 +111,66 @@ public class ProfileController {
                         
                          fName = rsUser.getString("firstName");
                           lName = rsUser.getString("lastName");
-                    
-                
+                          int commentCount = 0;
+                          List<Comment> commentList = new ArrayList<>();
+                          final String commentSql = "select * from comment where comment.postId = ? ORDER BY commentDate DESC";
+                          try (Connection connComment = dataSource.getConnection();
+                          PreparedStatement commentStmt = connComment.prepareStatement(commentSql)) {
+                              commentStmt.setString(1, viewingPostId);
+                              ResultSet commentSet = commentStmt.executeQuery();
+                              
+                              while(commentSet.next()) {
+                                  commentCount++;
+                                  String content = commentSet.getString("commentText");
+                                  String date = commentSet.getString("commentDate");
+                                  String commentUserId = commentSet.getString("userID");
+                                  try (Connection conn3 = dataSource.getConnection();
+                PreparedStatement pstmt3 = conn3.prepareStatement(usersql)) {
+                    pstmt3.setString(1, commentUserId);
+                    ResultSet rsCommentUser = pstmt3.executeQuery();
+
+                    while (rsCommentUser.next()) {
+                        String commentFirstName = rsCommentUser.getString("firstName");
+                        String commentLastName = rsCommentUser.getString("lastName");
+                        User userX = new User(commentUserId,commentFirstName, commentLastName);
+
+                        Comment commentX = new Comment(viewingPostId, content, date, userX);
+                        commentList.add(commentX); 
+                    }
+                }
+            }
+                }
+                Boolean isHeart = false;
+                int heartCount = 0;
+                final String heartSql = "select * from heart where postId = ?";
+                try (Connection connHeart = dataSource.getConnection();
+                    PreparedStatement heartStmt = connHeart.prepareStatement(heartSql)) {
+                        heartStmt.setString(1, viewingPostId);
+                        ResultSet heartSet = heartStmt.executeQuery();
+                        while (heartSet.next()) {
+                        heartCount++;
+                        
+                    }
+    
+                    }
+                    final String heartUserSql = "select * from heart where userId = ? AND postId = ?";
+                    try (Connection connHeartUser = dataSource.getConnection();
+                    PreparedStatement heartUserStmt = connHeartUser.prepareStatement(heartUserSql)) {
+                        heartUserStmt.setString(1, userService.getLoggedInUser().getUserId());
+                        heartUserStmt.setString(2, viewingPostId);
+                        ResultSet heartSet = heartUserStmt.executeQuery();
+                        while (heartSet.next()) {
+                        isHeart = true;
+                        
+                    }
+    
+                    }
                     User userX = new User(userId, fName, lName);
-                    Post x = new Post(viewingPostId, postText, postDate, userX, 0, 0, false, false);
+                    Post x = new ExpandedPost(viewingPostId, postText, postDate, userX, heartCount, commentCount, isHeart, false, commentList);
                     
                     posts.add(x);
+                              
+                            
                     }
             }
             }
