@@ -133,6 +133,7 @@ public class ProfileController {
                 }
                 Boolean isHeart = false;
                 int heartCount = 0;
+                Boolean isBookmarked = false;
                 //Query to find how many hearts are on a post
                 final String heartSql = "select * from heart where postId = ?";
                 try (Connection connHeart = dataSource.getConnection();
@@ -158,8 +159,21 @@ public class ProfileController {
                     }
     
                     }
+                    //Query to find if the post is bookmarked by the current user
+                final String bookmarkUserSql = "select * from bookmark where userId = ? AND postId = ?";
+                try (Connection connBookUser = dataSource.getConnection();
+                PreparedStatement bookUserStmt = connBookUser.prepareStatement(bookmarkUserSql)) {
+                    bookUserStmt.setString(1, userService.getLoggedInUser().getUserId());
+                    bookUserStmt.setString(2, viewingPostId);
+                    ResultSet bookSet = bookUserStmt.executeQuery();
+                    while (bookSet.next()) {
+                    isBookmarked = true;
+                    
+                }
+
+                }
                     User userX = new User(userId, fName, lName);
-                    Post x = new ExpandedPost(viewingPostId, postText, postDate, userX, heartCount, commentCount, isHeart, false, commentList);
+                    Post x = new ExpandedPost(viewingPostId, postText, postDate, userX, heartCount, commentCount, isHeart, isBookmarked, commentList);
                     posts.add(x);   
                     }
             }

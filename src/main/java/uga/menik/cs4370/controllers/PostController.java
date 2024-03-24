@@ -128,6 +128,7 @@ public class PostController {
         }
             Boolean isHeart = false;
             int heartCount = 0;
+            Boolean isBookmarked = false;
             //query to find the count of hearts on a post
             final String heartSql = "select * from heart where postId = ?";
             try (Connection connHeart = dataSource.getConnection();
@@ -153,7 +154,20 @@ public class PostController {
                 }
 
                 }
-            Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, heartCount, commentCount, isHeart, false, commentList);
+                //Query to find if the post is bookmarked by the current user
+                final String bookmarkUserSql = "select * from bookmark where userId = ? AND postId = ?";
+                try (Connection connBookUser = dataSource.getConnection();
+                PreparedStatement bookUserStmt = connBookUser.prepareStatement(bookmarkUserSql)) {
+                    bookUserStmt.setString(1, userService.getLoggedInUser().getUserId());
+                    bookUserStmt.setString(2, postId);
+                    ResultSet bookSet = bookUserStmt.executeQuery();
+                    while (bookSet.next()) {
+                    isBookmarked = true;
+                    
+                }
+
+                }
+            Post newPost = new ExpandedPost(viewingPostId, postText, postDate, x, heartCount, commentCount, isHeart, isBookmarked, commentList);
             posts.add(newPost);
                     }
 
@@ -277,14 +291,41 @@ public class PostController {
         System.out.println("The user is attempting add or remove a bookmark:");
         System.out.println("\tpostId: " + postId);
         System.out.println("\tisAdd: " + isAdd);
+        //if the user is removing a bookmark, delete the record from the table
+        if (isAdd == false) {
+            final String deleteBookmark = "delete from bookmark where userId = ? AND postId = ?";
+            try (Connection conn3 = dataSource.getConnection(); 
+                                PreparedStatement deletingPstmt = conn3.prepareStatement(deleteBookmark)) {
+                                    deletingPstmt.setString(1, userService.getLoggedInUser().getUserId());
+                                    deletingPstmt.setString(2, postId);
+                                    deletingPstmt.executeUpdate();
+                        }
+                     catch (SQLException e) {
+                        String message = URLEncoder.encode("Failed to (un)bookmark the post. Please try again.",
+                            StandardCharsets.UTF_8);
+                            return "redirect:/post/" + postId + "?error=" + message;
+                    }
+        } else {
+            //if the user is adding a bookmark, place that record into the table
+            final String bookmarkSql = "insert into bookmark (postId, userId) values (?,?)";
+            try (Connection conn = dataSource.getConnection();
+                PreparedStatement bookmarkStmt = conn.prepareStatement(bookmarkSql)) {
+                    bookmarkStmt.setString(1, postId);
+                    bookmarkStmt.setString(2, userService.getLoggedInUser().getUserId());
+                    bookmarkStmt.executeUpdate();
+                }
+                catch(SQLException e) {
+                    String message = URLEncoder.encode("Failed to (un)bookmark the post. Please try again.",
+                    StandardCharsets.UTF_8);
+                    return "redirect:/post/" + postId + "?error=" + message;
+                }
+            }
+        
+        //Redirect the user if the comment adding is a success.
+        return "redirect:/post/" + postId;
 
-        // Redirect the user if the comment adding is a success.
-        // return "redirect:/post/" + postId;
-
-        // Redirect the user with an error message if there was an error.
-        String message = URLEncoder.encode("Failed to (un)bookmark the post. Please try again.",
-                StandardCharsets.UTF_8);
-        return "redirect:/post/" + postId + "?error=" + message;
+        
     }
 
 }
+

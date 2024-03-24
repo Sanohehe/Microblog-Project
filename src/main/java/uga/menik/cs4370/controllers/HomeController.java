@@ -109,6 +109,7 @@ public class HomeController {
                 }
                 Boolean isHeart = false;
                 int heartCount = 0;
+                Boolean isBookmarked = false;
                 final String heartSql = "select * from heart where postId = ?";
             try (Connection connHeart = dataSource.getConnection();
                 PreparedStatement heartStmt = connHeart.prepareStatement(heartSql)) {
@@ -132,8 +133,21 @@ public class HomeController {
                 }
 
                 }
+                //Query to find if the post is bookmarked by the current user
+                final String bookmarkUserSql = "select * from bookmark where userId = ? AND postId = ?";
+                try (Connection connBookUser = dataSource.getConnection();
+                PreparedStatement bookUserStmt = connBookUser.prepareStatement(bookmarkUserSql)) {
+                    bookUserStmt.setString(1, userService.getLoggedInUser().getUserId());
+                    bookUserStmt.setString(2, viewingPostId);
+                    ResultSet bookSet = bookUserStmt.executeQuery();
+                    while (bookSet.next()) {
+                    isBookmarked = true;
+                    
+                }
+
+                }
                     User userX = new User(postUser, fName, lName);
-                    Post x = new Post(viewingPostId, postText, postDate, userX, heartCount, comments, isHeart, false);
+                    Post x = new Post(viewingPostId, postText, postDate, userX, heartCount, comments, isHeart, isBookmarked);
                     posts.add(x);
                     }
             }
