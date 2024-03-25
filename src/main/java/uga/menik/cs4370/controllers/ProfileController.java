@@ -72,7 +72,7 @@ public class ProfileController {
     @GetMapping("/{userId}")
     public ModelAndView profileOfSpecificUser(@PathVariable("userId") String userId) throws SQLException {
         System.out.println("User is attempting to view profile: " + userId);
-        
+        List<Post> posts = new ArrayList<>();
         // See notes on ModelAndView in BookmarksController.java.
         ModelAndView mv = new ModelAndView("posts_page");
         // Following line populates sample data.
@@ -85,7 +85,7 @@ public class ProfileController {
                     String postText ="";
                     String postDate ="";
                     pstmt.setString(1, userId);
-                    List<Post> posts = new ArrayList<>();
+                    
                     ResultSet rs = pstmt.executeQuery();
                     while (rs.next()) {
                     viewingPostId = rs.getString("postId");
@@ -193,7 +193,9 @@ public class ProfileController {
 
         // Enable the following line if you want to show no content message.
         // Do that if your content list is empty.
-        //mv.addObject("isNoContent", true);
+        if (posts.isEmpty()) {
+        mv.addObject("isNoContent", true);
+        }
         
         
         return mv;

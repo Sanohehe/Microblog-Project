@@ -67,6 +67,7 @@ public class HomeController {
         // You should replace it with actual data from the database.
         final String sql2 = "select * from post,follow where userId != ? AND followerUserId = ? AND followeeUserId = userId ORDER BY postDate DESC";
         //first sql query that grabs the data from the post table.
+        List<Post> posts = new ArrayList<>();
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql2)) {
                     String userId = userService.getLoggedInUser().getUserId();
@@ -75,7 +76,6 @@ public class HomeController {
                     String postDate ="";
                     pstmt.setString(1, userId);
                     pstmt.setString(2, userId);
-                    List<Post> posts = new ArrayList<>();
                     ResultSet rs = pstmt.executeQuery();
                     while (rs.next()) {
                     viewingPostId = rs.getString("postId");
@@ -166,7 +166,9 @@ public class HomeController {
 
         // Enable the following line if you want to show no content message.
         // Do that if your content list is empty.
-        // mv.addObject("isNoContent", true);
+        if (posts.isEmpty()) {
+        mv.addObject("isNoContent", true);
+        }
 
         return mv;
                 

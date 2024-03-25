@@ -63,7 +63,7 @@ public class BookmarksController {
         List<Post> posts = new ArrayList<>();
         
         //Query to find posts that the user has bookmarked
-        final String sql = "select post.postId, post.userId, postDate, postText from post,bookmark where bookmark.userId = ?  AND bookmark.postId = post.postId";
+        final String sql = "select post.postId, post.userId, postDate, postText from post,bookmark where bookmark.userId = ?  AND bookmark.postId = post.postId ORDER BY postDate DESC";
         try (Connection conn = dataSource.getConnection();
                 PreparedStatement pstmt = conn.prepareStatement(sql)) {
                     pstmt.setString(1, userService.getLoggedInUser().getUserId());
@@ -159,9 +159,11 @@ public class BookmarksController {
                     // String errorMessage = "Some error occured!";
                     // mv.addObject("errorMessage", errorMessage);
             
-                    // Enable the following line if you want to show no content message.
+                    //Enable the following line if you want to show no content message.
                     // Do that if your content list is empty.
-                    // mv.addObject("isNoContent", true);
+                    if (posts.isEmpty()) {
+                    mv.addObject("isNoContent", true);
+                    }
             
                     return mv;
                 }
