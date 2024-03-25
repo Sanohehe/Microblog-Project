@@ -73,7 +73,13 @@ create table if not exists follow (
 );
 
 --insert sample data
-
+--NOTE: the passwords for the users are as follows:
+--bbarnes30: glass888
+--J_jackson: password123
+--J_jameson: password456
+--S_Sinai: password789
+--D_Awesome: password000
+--NOTE: INSERT THE TABLES STARTING FROM POST (at the bottom)
 --bookmark
 
 --comment
@@ -126,18 +132,18 @@ insert into heart (postId, userID) values
 
 --post
 insert into post (postId, userId, postDate, postText) values
-(9,1,"Mar 20, 2024, 6:42 PM", "Hi! I am Brandon #test"),
-(10,2,"Mar 20, 2024, 6:42 PM", "Hi! I am James i love #cats and #dogs"),
-(11,3,"Mar 20, 2024, 6:43 PM", "Hi! I am Jill. i love #cats and #books"),
-(12,4,"Mar 20, 2024, 6:43 PM", "Hi! I am Sam! i love #books and #dogs"),
-(13,1,"Mar 20, 2024, 6:50 PM", "This is a second post from me, at a different time! #test"),
-(14,2,"Mar 20, 2024, 7:39 PM", "This is a second post by me, James. #test"),
-(15,1,"Mar 24, 2024, 1:41 PM", "#cats #test #dogs");
+(9,1,"Mar 20, 2024, 06:42 PM", "Hi! I am Brandon #test"),
+(10,2,"Mar 20, 2024, 06:42 PM", "Hi! I am James i love #cats and #dogs"),
+(11,3,"Mar 20, 2024, 06:43 PM", "Hi! I am Jill. i love #cats and #books"),
+(12,4,"Mar 20, 2024, 06:43 PM", "Hi! I am Sam! i love #books and #dogs"),
+(13,1,"Mar 20, 2024, 06:50 PM", "This is a second post from me, at a different time! #test"),
+(14,2,"Mar 20, 2024, 07:39 PM", "This is a second post by me, James. #test"),
+(15,1,"Mar 24, 2024, 01:41 PM", "#cats #test #dogs");
 
 --user
-insert into user (userId, username, password, firstName, lastName) values
-(1, "bbarnes30", "glass888", "Brandon", "Barnes"),
-(2, "J_Jackson", "password123", "John", "Jackson"),
-(3, "J_Jameson", "password456", "Jill", "Jameson"),
-(1, "S_Sin", "password789", "Sam", "Sinai"),
-(1, "D_Awesome", "password000", "Dude", "Awesome");
+INSERT INTO `user` (`userId`, `username`, `password`, `firstName`, `lastName`) 
+VALUES (1,'bbarnes30','$2a$10$Iyks/I4lxFQh5Je4vuk.J.yoXOkRnpFt/a5WImm2FtDaW0NLHCWv6','Brandon','Barnes'),
+(2,'J_Jackson','$2a$10$vLcO0Q2XDvvinnMrym3YpOF9F8wGo.3J.ul5b3UG8eIzOig739SMW','John ','Jackson'),
+(3,'J_Jameson','$2a$10$jXF2.0/tw5xybTarM16r/uULh.AnQW4yudQ1fiaVtjEM1.cj9gET6','Jill','Jameson'),
+(4,'S_Sin','$2a$10$bWCPrWNrhnlAlXQ6Jojt2eNfcYlaYLi8vFWFdbuHaGCvE/YGk3ebm','Sam','Sinai'),
+(5,'D_Awesome','$2a$10$pGqwLOp2RZXjC/hPs5dVwu4gZ/QSAJKbwluDDlisUm7kmskdGiTSa','Dude','Awesome');
